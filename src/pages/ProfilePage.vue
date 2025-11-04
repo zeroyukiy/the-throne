@@ -69,6 +69,7 @@ p {
 .bg-user-profile {
     position: relative;
     width: 100%;
+    max-width: 1200px;
     height: 260px;
     background: url('../assets/anime-girl-looking-for-sunset_bmVsZmuUmZqaraWkpJRmbmdlrWZlbWU-3996841341.jpg') no-repeat center center / cover;
     border-radius: .6em;

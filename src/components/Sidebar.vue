@@ -1,8 +1,26 @@
 <script setup>
-import { ref } from 'vue';
-import { LogoutOutlined, HomeOutlined, UserOutlined, MessageOutlined } from '@ant-design/icons-vue';
+import { onMounted, ref } from 'vue';
+import { LogoutOutlined, HomeOutlined, UserOutlined, MessageOutlined, FireOutlined } from '@ant-design/icons-vue';
 
 const bounce = ref(false)
+
+// close the sidebar when the user click on one of the links
+const props = defineProps(['open', 'is_open'])
+
+onMounted(() => {
+    document.querySelectorAll("li > a.link").forEach((element) => {
+        element.addEventListener("click", (e) => {
+            if (props.is_open) {
+                props.open()
+            }
+        })
+    })
+})
+
+const logout = () => {
+    // call the /auth/logout endpoint
+    localStorage.removeItem("user")
+}
 
 </script>
 
@@ -19,6 +37,11 @@ const bounce = ref(false)
                 <li>
                     <RouterLink class="link" active-class="active" to="/profile">Personaggio
                         <UserOutlined />
+                    </RouterLink>
+                </li>
+                <li>
+                    <RouterLink class="link" active-class="active" to="/explore">Esplora
+                        <FireOutlined />
                     </RouterLink>
                 </li>
             </ul>
@@ -49,7 +72,8 @@ const bounce = ref(false)
         <ul class="menu-settings">
             <li>
                 <div class="bounce-ball" :class="bounce === true ? 'active' : ''"></div>
-                <RouterLink class="link link-danger" to="/" @mouseover="bounce = true" @mouseout="bounce = false">
+                <RouterLink class="link link-danger" to="/logout" @mouseover="bounce = true" @mouseout="bounce = false"
+                    @click="logout">
                     Disconnetti
                     <LogoutOutlined />
                 </RouterLink>
@@ -105,6 +129,7 @@ li span {
 }
 
 .bounce-ball {
+    display: none;
     opacity: 0;
     position: relative;
     top: 10px;
@@ -118,6 +143,7 @@ li span {
 }
 
 .bounce-ball.active {
+    display: block;
     opacity: 1;
     width: 10px;
     background-color: #FFE0B2;
