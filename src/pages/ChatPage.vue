@@ -1,14 +1,15 @@
 <script setup>
+import { auth } from '@/auth.vue';
 import { EventType, getWebsocket, open } from '@/ws';
-import { EllipsisOutlined, SendOutlined } from '@ant-design/icons-vue';
-import { Button, Avatar, Space, Card, Badge, Textarea, Form, FormItem } from 'ant-design-vue';
+import { EllipsisOutlined, SendOutlined, GiftFilled } from '@ant-design/icons-vue';
+import { Button, Avatar, Space, Card, Badge, Textarea } from 'ant-design-vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 const value1 = ref("")
 
 const messages = ref([
     {
-        user: "abcd",
+        username: "abcd",
         message: `Nunc quis sem mattis, ullamcorper sem sit amet, pulvinar magna. Cras iaculis felis ut felis accumsan
                     interdum. Aliquam erat volutpat. Proin eu erat massa. Phasellus a velit augue. Suspendisse eu lacus
                     in purus pulvinar scelerisque non sit amet mauris. Pellentesque tellus ipsum, volutpat ut
@@ -29,7 +30,7 @@ const messages = ref([
                     sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`
     },
     {
-        user: "lollo0",
+        username: "lollo0",
         message: `In ac pretium libero. Proin lacinia dapibus risus, consectetur mattis libero dictum quis. Aenean
                     cursus, libero non blandit condimentum, felis nisi consequat nisl, quis pharetra nunc nulla quis
                     diam. Praesent ultrices lectus nulla, non finibus mauris vulputate ut. Proin vitae arcu non diam
@@ -60,7 +61,7 @@ const messages = ref([
                     molestie dui eu fringilla.`
     },
     {
-        user: "aa",
+        username: "aa",
         message: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vulputate urna ante, ac elementum
                     turpis tincidunt at. Mauris molestie condimentum sapien eu congue. Sed egestas congue euismod.
                     Maecenas non nisl eget risus commodo fringilla. Praesent cursus ligula in neque elementum fermentum.
@@ -70,7 +71,7 @@ const messages = ref([
                     venenatis. Quisque eget luctus tellus.`
     },
     {
-        user: "someone",
+        username: "someone",
         message: `Nunc quis sem mattis, ullamcorper sem sit amet, pulvinar magna. Cras iaculis felis ut felis accumsan
                     interdum. Aliquam erat volutpat. Proin eu erat massa. Phasellus a velit augue. Suspendisse eu lacus
                     in purus pulvinar scelerisque non sit amet mauris. Pellentesque tellus ipsum, volutpat ut
@@ -99,7 +100,9 @@ const chatUserListOnline = () => {
 
 const ws = getWebsocket()
 
-onMounted(() => {
+onMounted(async () => {
+    console.log(auth.user)
+
     if (open === true) {
         ws.send(JSON.stringify({
             "event_type": EventType.Join,
@@ -109,17 +112,28 @@ onMounted(() => {
 
     ws.onmessage = (payload) => {
         console.log(payload)
-        const { event_type, message, username } = JSON.parse(payload.data)
+        const { event_type, message, username, avatar, created_at } = JSON.parse(payload.data)
         if (event_type == EventType.Message) {
             // messages.value.push(message)
             messages.value.push({
-                user: username,
-                message: message
+                username: username,
+                avatar: avatar,
+                message: message,
+                created_at: created_at,
             })
             pushWindowToBottom()
         }
     }
 
+    const msgs = await fetch("http://localhost:8000/api/messages/chat_1", {
+        method: "get",
+        mode: 'cors',
+    })
+    if (msgs.ok) {
+        const data = await msgs.json()
+        messages.value.push(...data)
+        console.log(messages.value)
+    }
 })
 
 onBeforeUnmount(() => {
@@ -128,7 +142,21 @@ onBeforeUnmount(() => {
     }))
 })
 
-function send() {
+async function send() {
+    const msgs = await fetch("/api/message", {
+        headers: {
+            "Content-Type": "application/json"
+        },
+        method: "POST",
+        mode: 'cors',
+        credentials: 'include',
+        body: JSON.stringify({
+            "message": value1.value,
+        })
+    })
+    if (msgs.ok) {
+        console.log("message sent")
+    }
     // console.log(value1.value)
     // messages.value.push({
     //     user: 'Jon Snow',
@@ -198,17 +226,32 @@ function pushWindowToBottom() {
         </div>
         <div class="chat-container">
             <div class="text">
-                <p style="margin-bottom: 1em;" v-for="msg in messages">
-                    <Avatar size="large" style="background-color: rgba(0, 0, 0, 0.4);" />
-                    <span>{{ msg.user }}</span>
-                    {{ msg.message }}
-                </p>
+                <div class="user-message" v-for="msg in messages">
+                    <div class="user-avatar">
+                        <Avatar size="large" shape="square" :src="msg.avatar ?? msg.avatar"
+                            style="background-color: rgba(0, 0, 0, 0.4); width: 48px; height: 48px;" />
+                        <!-- <div style="width: 16px; height: 16px; background-color: rgba(0,0,0,.45);"> -->
+                        <div>
+                            <!-- <GiftOutlined /> -->
+                            <!-- <GiftTwoTone /> -->
+                            <GiftFilled />
+                        </div>
+                    </div>
+                    <div class="user-content">
+                        <span style="font-weight: bold; text-transform: capitalize;">{{ msg.username }}</span>
+                        <span style="font-size: 14px;">{{ msg.created_at }}</span>
+                        <p>
+                            {{ msg.message }}
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="write-message">
                 <div class="inner">
                     <div class="input">
-                        <Button type="link" size="small" style="font-size: 10px; padding: 0;">logged as: Jon
-                            Snow</Button>
+                        <Button type="link" size="small" style="font-size: 10px; padding: 0;">logged as: {{
+                            auth.user
+                            }}</Button>
                         <div class="form-send-message">
                             <Textarea v-model:value="value1" size="large" style="width: 100%; margin-right: .5em;"
                                 placeholder="scrivi la tua azione qui.." :auto-size="{ minRows: 1, maxRows: 5 }"
@@ -271,10 +314,13 @@ function pushWindowToBottom() {
     width: 100%;
     opacity: 0;
     padding: 1em;
-    background-color: #8e7b73;
-    background: linear-gradient(120deg, rgba(132, 114, 102, .8) 0%, rgba(88, 76, 72, .8) 100%);
+    background-color: #b09c8f;
+    background: linear-gradient(90deg, rgba(176, 156, 143, .7) 0%, rgba(150, 131, 116, .9) 100%);
     transition: all .3s cubic-bezier(0.165, 0.84, 0.44, 1);
     backdrop-filter: blur(5px);
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+    border-bottom-left-radius: .3em;
+    border-bottom-right-radius: .3em;
 }
 
 .user-list-online.open {
@@ -307,10 +353,6 @@ function pushWindowToBottom() {
     margin-right: 0;
 }
 
-.users .user .ant-card-body {
-    padding: .6em .4em;
-}
-
 .user-list-online .user .avatar {
     background-color: rgba(0, 0, 0, 0.4);
     border: 2px solid rgba(0, 0, 0, 0.5);
@@ -323,8 +365,38 @@ function pushWindowToBottom() {
 }
 
 .text {
-    line-height: 1.6;
+    line-height: 1.4;
     padding-bottom: 80px;
+}
+
+.user-message {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 1.5em;
+}
+
+.user-message .user-avatar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    /* width: 60px; */
+}
+
+.user-avatar div {
+    width: 100%;
+    margin-top: .3em;
+    border-radius: 50%;
+}
+
+.user-message .user-content {
+    width: 100%;
+}
+
+.user-content span {
+    margin-right: .5em;
 }
 
 .write-message {

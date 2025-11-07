@@ -1,6 +1,12 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-import { LogoutOutlined, HomeOutlined, UserOutlined, MessageOutlined, FireOutlined } from '@ant-design/icons-vue';
+import { createVNode, onMounted, ref, watch } from 'vue';
+import { ExclamationCircleOutlined, LogoutOutlined, HomeOutlined, UserOutlined, MessageOutlined, FireOutlined, LoginOutlined } from '@ant-design/icons-vue';
+import { auth } from '@/auth.vue';
+import { useRouter } from 'vue-router';
+import { getWebsocket } from '@/ws';
+import { Modal } from 'ant-design-vue';
+
+const router = useRouter()
 
 const bounce = ref(false)
 
@@ -8,6 +14,7 @@ const bounce = ref(false)
 const props = defineProps(['open', 'is_open'])
 
 onMounted(() => {
+    console.log(auth)
     document.querySelectorAll("li > a.link").forEach((element) => {
         element.addEventListener("click", (e) => {
             if (props.is_open) {
@@ -17,9 +24,39 @@ onMounted(() => {
     })
 })
 
-const logout = () => {
-    // call the /auth/logout endpoint
-    localStorage.removeItem("user")
+watch(auth,
+    (user, prevUser) => {
+        console.log("user: ", user)
+        console.log("prev-user: ", prevUser)
+    })
+
+const logout = async () => {
+    Modal.confirm({
+        title: 'Vuoi effettuare il log out?',
+        icon: createVNode(ExclamationCircleOutlined),
+        content: 'clicca ok per terminare la sessione',
+        async onOk() {
+            // call the api/auth/logout endpoint
+            const req = await fetch("/api/auth/logout", {
+                method: "POST",
+                body: JSON.stringify({
+                })
+            })
+            if (req.ok) {
+                auth.value.user = ""
+                localStorage.removeItem("user")
+                console.log("logout success")
+                router.push("/")
+                    .then(() => {
+                        console.log("oooo ok")
+                        getWebsocket().close()
+                        // window.location.reload()
+                    })
+            }
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        onCancel() { },
+    });
 }
 
 </script>
@@ -72,10 +109,15 @@ const logout = () => {
         <ul class="menu-settings">
             <li>
                 <div class="bounce-ball" :class="bounce === true ? 'active' : ''"></div>
-                <RouterLink class="link link-danger" to="/logout" @mouseover="bounce = true" @mouseout="bounce = false"
-                    @click="logout">
+                <RouterLink class="link link-danger" to="" @mouseover="bounce = true" @mouseout="bounce = false"
+                    @click="logout" v-if="auth.user">
                     Disconnetti
                     <LogoutOutlined />
+                </RouterLink>
+                <RouterLink class="link link-success" to="/login" @mouseover="bounce = true" @mouseout="bounce = false"
+                    v-else>
+                    Connetti
+                    <LoginOutlined />
                 </RouterLink>
             </li>
         </ul>
@@ -128,12 +170,20 @@ li span {
     text-decoration: line-through;
 }
 
+.link-success {
+    /* color: #fb2c36; */
+}
+
+.link-success:hover {
+    background-color: #43A047;
+    text-decoration: line-through;
+}
+
 .bounce-ball {
     display: none;
     opacity: 0;
-    position: relative;
-    top: 10px;
-    left: 183px;
+    position: absolute;
+    left: 190px;
     width: 10px;
     height: 10px;
     border-radius: 50%;
