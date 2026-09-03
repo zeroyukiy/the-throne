@@ -120,8 +120,9 @@ const chatUserListOnline = () => {
 
 const { socket } = userStore;
 const loading = ref(true)
-const room = reactive({
+const chat = reactive({
     id: "",
+    description: "",
     users: []
 })
 
@@ -130,7 +131,7 @@ watch(loading, async (old, next) => {
     socket.send(JSON.stringify({
         event: EventType.JoinRoom,
         payload: {
-            room_id: room.id,
+            room_id: chat.id,
         },
     }))
 })
@@ -146,15 +147,17 @@ const getRoom = async (id) => {
         if (req.ok) {
             const result = await req.json()
             console.log(result)
-            const { room_id, clients } = result
-            if (room_id === id) {
+            const { name, slug, description } = result
+            if (slug === id) {
                 console.log('room_id ok')
-                room.id = room_id
-                room.users = clients
+                chat.id = slug
+                chat.name = name.charAt(0).toUpperCase() + name.slice(1)
+                chat.description = description
                 loading.value = false
             }
         } else {
-            router.push({ name: "NotFound" })
+            // router.push({ name: "NotFound"})
+            router.replace({ path: "/notfound" })
         }
     } catch (err) {
         console.error(err)
@@ -259,12 +262,13 @@ const openAlertMessage = () => {
         y: 20,
         opacity: 1,
         duration: 0.4,
+        display: "block",
         ease: "power4.out",
     });
 };
 
 const closeAlertMessage = () => {
-    gsap.to(".chat>.alert-message", { opacity: 0, duration: 0.4 });
+    gsap.to(".chat>.alert-message", { opacity: 0, duration: 0.4, display: "none" });
 };
 
 let tl = gsap.timeline();
@@ -303,7 +307,7 @@ onUnmounted(async () => {
         </div>
         <div class="chat-header">
             <div class="chat-header-blur">
-                <div class="chat-title">Titolo della chat</div>
+                <div class="chat-title">{{ chat.name }}</div>
                 <Button type="text" @click="chatUserListOnline">
                     <template #icon>
                         <EllipsisOutlined />
@@ -353,9 +357,7 @@ onUnmounted(async () => {
                 <div class="description">
                     <h2>Descrizione</h2>
                     <p>
-                        Maecenas molestie eros id leo accumsan sagittis. Mauris
-                        malesuada, metus quis efficitur rutrum, lorem orci
-                        molestie ligula...
+                        {{ chat.description }}
                     </p>
                     <div class="tags">
                         <Tag color="pink">free-role</Tag>
@@ -411,6 +413,7 @@ onUnmounted(async () => {
 
 <style>
 .alert-message {
+    display: none;
     width: 280px;
     position: fixed;
     z-index: 100;

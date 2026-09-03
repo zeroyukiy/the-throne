@@ -52,7 +52,7 @@ router.beforeEach(async (to, from) => {
 
       console.log("[api: /@me]", user);
 
-      const socket = await userStore.init(user);
+      await userStore.init(user);
     } else {
       // redirect the user to the login page
       return "/login";

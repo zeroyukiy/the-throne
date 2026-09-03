@@ -102,5 +102,6 @@ const showCards = () => {
   height: 200px;
   margin-right: 5px;
   box-shadow: 0 4px 8px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 </style>

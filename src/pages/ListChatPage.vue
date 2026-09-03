@@ -32,33 +32,21 @@ onUnmounted(() => {
 
 const getRooms = async () => {
     try {
-        // const req = await fetch(`http://localhost:8000/chat/list`)
-        // if (req.ok) {
-        //     const result = await req.json()
-        //     console.log(result)
-        //     const { rooms } = result
-        //     if (rooms.length > 0) {
-        //         console.log('list rooms ok')
-        //         chatList.rooms = rooms
-        chatList.rooms = [
-            {
-                room_id: "example",
-            },
-            {
-                room_id: "lalala",
-            },
-            {
-                room_id: "pluto-for-the-king",
-            },
-        ];
-        loading.value = false;
-        setTimeout(() => {
-            chatList.loading = false;
-        }, 1500);
-        //     }
-        // } else {
-        //     router.push({ name: "NotFound" })
-        // }
+        const req = await fetch(`http://localhost:8000/chat/all`)
+        if (req.ok) {
+            const result = await req.json()
+            console.log(result)
+            if (result.length > 0) {
+                console.log('list rooms ok')
+                chatList.rooms = result
+                loading.value = false;
+                // setTimeout(() => {
+                //     chatList.loading = false;
+                // }, 1500);
+            }
+        } else {
+            router.replace({ path: "/notfound" })
+        }
     } catch (err) {
         console.error(err);
     }
@@ -77,21 +65,10 @@ const getRooms = async () => {
         </div>
 
         <div class="cards" v-show="!loading">
-            <RouterLink
-                class="link"
-                :to="'/chat/' + room.room_id"
-                v-for="room in chatList.rooms"
-            >
-                <Card
-                    :title="room.room_id"
-                    extra="in corso"
-                    :bordered="false"
-                    :head-style="{
-                        borderBottom: '2px solid rgba(0, 0, 0, .65)',
-                    }"
-                    size="small"
-                    style="background-color: rgb(200, 230, 201)"
-                >
+            <RouterLink class="link" :to="'/chat/' + room.slug" v-for="room in chatList.rooms">
+                <Card :title="room.room_id" extra="in corso" :bordered="false" :head-style="{
+                    borderBottom: '2px solid rgba(0, 0, 0, .65)',
+                }" size="small" style="background-color: rgb(200, 230, 201)">
                     <div class="description">
                         <a-space align="start">
                             <Avatar shape="square" size="large" />
@@ -111,11 +88,7 @@ const getRooms = async () => {
                     </div>
                     <div class="card-info">
                         <div class="status">
-                            <a-tooltip
-                                placement="right"
-                                title="open"
-                                color="#3d3332"
-                            >
+                            <a-tooltip placement="right" title="open" color="#3d3332">
                                 <UnlockOutlined />
                             </a-tooltip>
                         </div>
@@ -127,13 +100,8 @@ const getRooms = async () => {
                 </Card>
             </RouterLink>
 
-            <Card
-                title="Card title"
-                extra="conclusa"
-                :bordered="false"
-                size="small"
-                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }"
-            >
+            <Card title="Card title" extra="conclusa" :bordered="false" size="small"
+                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }">
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
@@ -154,11 +122,7 @@ const getRooms = async () => {
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip
-                            placement="right"
-                            title="close"
-                            color="#3d3332"
-                        >
+                        <a-tooltip placement="right" title="close" color="#3d3332">
                             <LockOutlined />
                         </a-tooltip>
                     </div>
@@ -169,13 +133,8 @@ const getRooms = async () => {
                 </div>
             </Card>
 
-            <Card
-                title="Card title"
-                extra="conclusa"
-                :bordered="false"
-                size="small"
-                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }"
-            >
+            <Card title="Card title" extra="conclusa" :bordered="false" size="small"
+                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }">
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
@@ -192,11 +151,7 @@ const getRooms = async () => {
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip
-                            placement="right"
-                            title="close"
-                            color="#3d3332"
-                        >
+                        <a-tooltip placement="right" title="close" color="#3d3332">
                             <LockOutlined />
                         </a-tooltip>
                     </div>
@@ -207,13 +162,7 @@ const getRooms = async () => {
                 </div>
             </Card>
 
-            <Card
-                :loading="true"
-                :bordered="false"
-                size="small"
-                :key="k"
-                v-for="k in 4"
-            >
+            <Card :loading="true" :bordered="false" size="small" :key="k" v-for="k in 4">
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
@@ -225,11 +174,7 @@ const getRooms = async () => {
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip
-                            placement="right"
-                            title="close"
-                            color="#3d3332"
-                        >
+                        <a-tooltip placement="right" title="close" color="#3d3332">
                             <LockOutlined />
                         </a-tooltip>
                     </div>

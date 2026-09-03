@@ -26,8 +26,9 @@ export const useUserStore = defineStore("user", () => {
       };
 
       ws.onclose = () => {
+        socket.value = null
         clearTimeout(timeout);
-        reject(new Error("WebSocket connection closed"));
+        // reject(new Error("WebSocket connection closed"));
       };
     });
   };
@@ -35,6 +36,7 @@ export const useUserStore = defineStore("user", () => {
   const logout = () => {
     is_auth.value = false;
     username.value = "";
+    socket.value.close(1000)
   };
 
   return { username, is_auth, avatar, socket, init, logout };

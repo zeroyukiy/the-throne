@@ -29,8 +29,8 @@ const onFinish = async values => {
         if (user !== "") {
             userStore.init(user)
             // localStorage.setItem("user", token)
-            window.location.href = "/"
-            // router.push("/")
+            // window.location.href = "/"
+            router.push("/")
         }
     }
 };

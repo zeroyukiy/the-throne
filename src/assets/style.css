@@ -76,6 +76,10 @@ a {
     padding: 1em;
 }
 
+.navbar .menu .placeholder {
+    width: 40px;
+}
+
 .navbar .open-menu {
     display: none;
     width: 40px;

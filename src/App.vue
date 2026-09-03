@@ -40,7 +40,7 @@ onMounted(() => {
           <MenuOutlined />
         </a>
       </div>
-      <div class="."></div>
+      <div class="placeholder"></div>
       <div class="logo">
         <!-- Aot the Game -->
         The
