@@ -1,10 +1,11 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { setWebsocket } from '@/ws';
 import { reactive } from 'vue';
-import { auth } from '@/auth.vue';
+import { useUserStore } from '@/store/user';
 
 const router = useRouter()
+
+const userStore = useUserStore()
 
 const formState = reactive({
     username: '',
@@ -13,26 +14,23 @@ const formState = reactive({
 });
 const onFinish = async values => {
     console.log('Success:', values);
-    // fetch /api/login
-    const login = await fetch("/api/login", {
-        headers: {
-            "Content-Type": "application/json"
-        },
-        mode: 'cors',
-        method: "post",
-        body: JSON.stringify(values)
+    // fetch /api/auth/login
+    const login = await fetch("http://localhost:8000/login", {
+        credentials: 'include',
+        method: 'POST',
+        body: JSON.stringify({
+            username: formState.username,
+            password: formState.password,
+        })
     })
     if (login.ok) {
-        const json = await login.json()
-        console.log(json)
-        const { token } = json
-        if (token !== "") {
-            auth.value.user = "pippo"
-            localStorage.setItem("user", token)
-            router.push("/profile").then(() => {
-                setWebsocket()
-                // return window.location.reload()
-            })
+        const { user } = await login.json()
+        console.log(user)
+        if (user !== "") {
+            userStore.init(user)
+            // localStorage.setItem("user", token)
+            window.location.href = "/"
+            // router.push("/")
         }
     }
 };
@@ -46,7 +44,7 @@ const onFinishFailed = errorInfo => {
 
     <div class="content">
         <h1>Login</h1>
-        <div class="login" v-if="!auth.user">
+        <div class="login" v-if="!userStore.is_auth">
             <a-form class="login-form" layout="vertical" :model="formState" name="basic" style="width: 300px"
                 autocomplete="off" @finish="onFinish" @finishFailed="onFinishFailed">
                 <a-form-item label="Username" name="username"
@@ -82,8 +80,10 @@ const onFinishFailed = errorInfo => {
 
 .login-form {
     width: 300px;
-    background-color: antiquewhite;
+    /* background-color: antiquewhite; */
+    background-color: rgba(224, 224, 224, .4);
     padding: 1em;
     border-radius: .6em;
+    box-shadow: 0 2px 2px 1px rgba(0, 0, 0, .1);
 }
 </style>

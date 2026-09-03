@@ -1,12 +1,18 @@
-<script setup></script>
+<script setup>
+
+import { useUserStore } from '@/store/user';
+
+const userStore = useUserStore()
+
+</script>
 
 <template>
     <div class="bg-user-profile">
         <div class="profile">
             <div class="avatar">
-                <img src="http://localhost:8000/assets/avatars/avatar_wizard_human_woman_02.png" alt="">
+                <img :src="userStore.avatar" alt="">
             </div>
-            <div class="username">John Smith 81</div>
+            <!-- <div class="username">{{ store.user.name }}</div> -->
         </div>
     </div>
     <div class="content">
@@ -87,9 +93,13 @@ p {
 }
 
 .profile .username {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: bold;
-    text-shadow: 2px 2px rgba(255, 255, 255, .5);
+    text-shadow: 1px 2px 2px rgba(255, 255, 255, .3);
+    background-color: aquamarine;
+    padding: .1em .4em;
+    border-radius: .2em;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .avatar {
@@ -114,6 +124,7 @@ p {
     .bg-user-profile {
         border-radius: 0;
     }
+
     /* .bg-user-profile {
         position: absolute;
         height: 140px;

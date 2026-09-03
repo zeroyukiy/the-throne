@@ -1,8 +1,12 @@
 <script setup>
 import Sidebar from './components/Sidebar.vue';
 import { MenuOutlined } from '@ant-design/icons-vue';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { CrownOutlined } from '@ant-design/icons-vue'
+import { useUserStore } from './store/user.js';
+import { Avatar } from 'ant-design-vue';
+// import { gsap } from 'gsap';
+import { EventType } from './helpers/event_types.js';
 
 const sidebar = ref(false)
 const openMenu = () => {
@@ -15,6 +19,16 @@ const openMenu = () => {
   }
 }
 
+const userStore = useUserStore()
+
+onMounted(() => {
+  // const tl = gsap.timeline()
+  // tl.from('.logo', { x: 300, duration: 1, ease: 'power4.in' })
+  //   .to('.logo', { x: 20, duration: .5, ease: 'power4.in' })
+  //   .to('.logo', { x: 0, duration: .5, ease: 'power4.out' })
+
+})
+
 </script>
 
 <template>
@@ -26,6 +40,7 @@ const openMenu = () => {
           <MenuOutlined />
         </a>
       </div>
+      <div class="."></div>
       <div class="logo">
         <!-- Aot the Game -->
         The
@@ -33,6 +48,11 @@ const openMenu = () => {
         Throne
         <!-- Ultimo Trono -->
         <!-- Last Kingdom -->
+      </div>
+      <div class="user-logged">
+        <div v-show="userStore.is_auth">
+          <Avatar :size="48" src="http://localhost:8000/assets/avatars/pippo.jpg" circle />
+        </div>
       </div>
     </div>
   </div>

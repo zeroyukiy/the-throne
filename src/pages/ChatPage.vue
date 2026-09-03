@@ -1,11 +1,31 @@
 <script setup>
-import { auth } from '@/auth.vue';
-import { EventType, getWebsocket, open } from '@/ws';
-import { EllipsisOutlined, SendOutlined, GiftFilled } from '@ant-design/icons-vue';
-import { Button, Avatar, Space, Card, Badge, Textarea } from 'ant-design-vue';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { useUserStore } from "@/store/user";
+import {
+    EllipsisOutlined,
+    SendOutlined,
+    GiftFilled,
+} from "@ant-design/icons-vue";
+import {
+    Button,
+    Avatar,
+    Space,
+    Card,
+    Badge,
+    Textarea,
+    Tag,
+} from "ant-design-vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import gsap from "gsap";
+import { EventType } from "@/helpers/event_types";
+import { SmileOutlined } from "@ant-design/icons-vue";
+import { useRoute, useRouter } from "vue-router";
 
-const value1 = ref("")
+const userStore = useUserStore();
+
+const route = useRoute()
+const router = useRouter()
+
+const value1 = ref("");
 
 const messages = ref([
     {
@@ -27,7 +47,7 @@ const messages = ref([
                     velit convallis eu. Vestibulum commodo elit nunc, sed sagittis lectus imperdiet at. Suspendisse
                     molestie ultricies neque sit amet mollis. Proin massa diam, facilisis sit amet sem quis, malesuada
                     malesuada nunc. Nulla nec tellus ut quam semper rhoncus. Duis imperdiet ultrices ligula, quis mollis
-                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`
+                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`,
     },
     {
         username: "lollo0",
@@ -58,7 +78,7 @@ const messages = ref([
                     id ornare nibh elementum nec. Donec eu commodo ipsum, et posuere arcu. Donec consequat hendrerit
                     turpis sit amet vehicula. Etiam pharetra consectetur felis, id tempor felis tincidunt vel. Sed eget
                     efficitur turpis. Donec at magna eleifend, varius tortor in, sollicitudin ligula. Fusce ornare
-                    molestie dui eu fringilla.`
+                    molestie dui eu fringilla.`,
     },
     {
         username: "aa",
@@ -68,7 +88,7 @@ const messages = ref([
                     Donec porta vel lorem sed cursus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
                     posuere cubilia curae; Duis non tellus non ante vulputate tincidunt. Sed interdum id libero vitae
                     condimentum. Nullam eget ultricies urna, convallis finibus dolor. Phasellus tempus sed lectus eu
-                    venenatis. Quisque eget luctus tellus.`
+                    venenatis. Quisque eget luctus tellus.`,
     },
     {
         username: "someone",
@@ -89,107 +109,211 @@ const messages = ref([
                     velit convallis eu. Vestibulum commodo elit nunc, sed sagittis lectus imperdiet at. Suspendisse
                     molestie ultricies neque sit amet mollis. Proin massa diam, facilisis sit amet sem quis, malesuada
                     malesuada nunc. Nulla nec tellus ut quam semper rhoncus. Duis imperdiet ultrices ligula, quis mollis
-                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`
-    }
-])
+                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`,
+    },
+]);
 
-const chatUserListOpen = ref(false)
+const chatUserListOpen = ref(false);
 const chatUserListOnline = () => {
-    chatUserListOpen.value = !chatUserListOpen.value
+    chatUserListOpen.value = !chatUserListOpen.value;
+};
+
+const { socket } = userStore;
+const loading = ref(true)
+const room = reactive({
+    id: "",
+    users: []
+})
+
+watch(loading, async (old, next) => {
+    console.log(userStore.socket)
+    socket.send(JSON.stringify({
+        event: EventType.JoinRoom,
+        payload: {
+            room_id: room.id,
+        },
+    }))
+})
+
+// watch(, async (old, next) => {
+//     console.log(old)
+//     console.log(next)
+// })
+
+const getRoom = async (id) => {
+    try {
+        const req = await fetch(`http://localhost:8000/chat/${id}`)
+        if (req.ok) {
+            const result = await req.json()
+            console.log(result)
+            const { room_id, clients } = result
+            if (room_id === id) {
+                console.log('room_id ok')
+                room.id = room_id
+                room.users = clients
+                loading.value = false
+            }
+        } else {
+            router.push({ name: "NotFound" })
+        }
+    } catch (err) {
+        console.error(err)
+    }
 }
 
-const ws = getWebsocket()
-
 onMounted(async () => {
-    console.log(auth.user)
 
-    if (open === true) {
-        ws.send(JSON.stringify({
-            "event_type": EventType.Join,
-            "message": "chat_1",
-        }))
-    }
-
-    ws.onmessage = (payload) => {
-        console.log(payload)
-        const { event_type, message, username, avatar, created_at } = JSON.parse(payload.data)
-        if (event_type == EventType.Message) {
-            // messages.value.push(message)
-            messages.value.push({
-                username: username,
-                avatar: avatar,
-                message: message,
-                created_at: created_at,
-            })
-            pushWindowToBottom()
+    document.onscroll = () => {
+        // console.log((document.body.offsetHeight + 68) < (window.pageYOffset + window.innerHeight))
+        if ((document.body.offsetHeight + 68) < (window.pageYOffset + window.innerHeight)) {
+            closeAlertMessage()
         }
     }
 
-    const msgs = await fetch("http://localhost:8000/api/messages/chat_1", {
-        method: "get",
-        mode: 'cors',
-    })
-    if (msgs.ok) {
-        const data = await msgs.json()
-        messages.value.push(...data)
-        console.log(messages.value)
-    }
-})
+    console.log("mounted ", Date.now())
 
-onBeforeUnmount(() => {
-    ws.send(JSON.stringify({
-        "event_type": EventType.Leave,
-    }))
-})
+    if (socket.readyState === 1) {
+        await getRoom(route.params.id)
+        socket.onmessage = (message) => {
+            const { event, payload, timestamp } =
+                JSON.parse(message.data);
+            if (event == EventType.Message) {
+                console.log(message);
+                messages.value.push({
+                    username: payload.username,
+                    avatar: payload.avatar,
+                    message: payload.message,
+                    created_at: timestamp,
+                });
+                // pushWindowToBottom()
+                if (payload.username !== userStore.username) {
+                    openAlertMessage();
+                }
+            }
+        };
+
+    }
+
+
+    //     const msgs = await axios.get("/api/messages/chat_1", {
+    //         withCredentials: true,
+    //     })
+    //     if (msgs.status === 200) {
+    //         const data = msgs.data
+    //         console.log(data)
+    //         messages.value.push(...data)
+    //         console.log(messages.value)
+    //     }
+});
+
+// onBeforeUnmount(() => {
+//     ws.conn.send(JSON.stringify({
+//         "event_type": EventType.Leave,
+//     }))
+// })
 
 async function send() {
-    const msgs = await fetch("/api/message", {
-        headers: {
-            "Content-Type": "application/json"
-        },
-        method: "POST",
-        mode: 'cors',
-        credentials: 'include',
-        body: JSON.stringify({
-            "message": value1.value,
-        })
-    })
-    if (msgs.ok) {
-        console.log("message sent")
-    }
-    // console.log(value1.value)
-    // messages.value.push({
-    //     user: 'Jon Snow',
-    //     message: value1.value
+    // const msgs = await axios.post("/api/message", {
+    //     message: value1.value,
+    // }, {
+    //     withCredentials: true,
     // })
-    ws.send(JSON.stringify({
-        "event_type": EventType.Message,
-        "message": value1.value,
-    }))
-    value1.value = ''
-    pushWindowToBottom()
+    // if (msgs.status === 200) {
+    //     console.log("message sent")
+    // }
+    socket.send(
+        JSON.stringify({
+            event: EventType.Message,
+            payload: {
+                message: value1.value,
+            }
+        }),
+    );
+    value1.value = "";
+    pushWindowToBottom();
 }
 
 function pushWindowToBottom() {
     setTimeout(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: "smooth",
+        });
     }, 200);
 }
 
+function pushDown() {
+    closeAlertMessage();
+    pushWindowToBottom();
+}
+
+const openAlertMessage = () => {
+    const tl = gsap.timeline();
+    tl.to(".chat>.alert-message", {
+        x: 10,
+        y: -100,
+        opacity: 0,
+        duration: 0.1,
+    }).to(".chat>.alert-message", {
+        x: 10,
+        y: 20,
+        opacity: 1,
+        duration: 0.4,
+        ease: "power4.out",
+    });
+};
+
+const closeAlertMessage = () => {
+    gsap.to(".chat>.alert-message", { opacity: 0, duration: 0.4 });
+};
+
+let tl = gsap.timeline();
+onMounted(() => {
+    tl.to(".write-message", { y: 200, opacity: 0, duration: 0.1 }).to(
+        ".write-message",
+        { y: 0, opacity: 1, duration: 0.8, ease: "power4.out" },
+    );
+});
+
+onUnmounted(async () => {
+    tl = null;
+
+    socket.send(JSON.stringify({
+        event: EventType.LeaveRoom,
+        payload: {
+            room_id: "chat"
+        },
+    }))
+    // await socket.send(
+    //     JSON.stringify({
+    //         event_type: EventType.Leave,
+    //         message: "/chat",
+    //     }),
+    // );
+});
 </script>
 
 <template>
-    <div class="chat">
+    <!-- <div class="chat" v-show="ws.open"> -->
+    <div class="chat" v-show="!loading">
+        <div class="alert-message">
+            <a-alert message="Ci sono nuovi messaggi" type="info" show-icon @click="pushDown">
+                <template #icon><smile-outlined /></template>
+            </a-alert>
+        </div>
         <div class="chat-header">
             <div class="chat-header-blur">
-                <div class="chat-title">Chat Page</div>
+                <div class="chat-title">Titolo della chat</div>
                 <Button type="text" @click="chatUserListOnline">
                     <template #icon>
                         <EllipsisOutlined />
                     </template>
                 </Button>
             </div>
-            <div :class="chatUserListOpen ? 'user-list-online open' : 'user-list-online'">
+            <div :class="chatUserListOpen
+                ? 'user-list-online open'
+                : 'user-list-online'
+                ">
                 <div class="users">
                     <a href="" class="user">
                         <Card size="small">
@@ -226,20 +350,37 @@ function pushWindowToBottom() {
         </div>
         <div class="chat-container">
             <div class="text">
+                <div class="description">
+                    <h2>Descrizione</h2>
+                    <p>
+                        Maecenas molestie eros id leo accumsan sagittis. Mauris
+                        malesuada, metus quis efficitur rutrum, lorem orci
+                        molestie ligula...
+                    </p>
+                    <div class="tags">
+                        <Tag color="pink">free-role</Tag>
+                        <Tag color="blue">esplorazione</Tag>
+                    </div>
+                </div>
+
                 <div class="user-message" v-for="msg in messages">
                     <div class="user-avatar">
-                        <Avatar size="large" shape="square" :src="msg.avatar ?? msg.avatar"
-                            style="background-color: rgba(0, 0, 0, 0.4); width: 48px; height: 48px;" />
-                        <!-- <div style="width: 16px; height: 16px; background-color: rgba(0,0,0,.45);"> -->
-                        <div>
-                            <!-- <GiftOutlined /> -->
-                            <!-- <GiftTwoTone /> -->
-                            <GiftFilled />
+                        <Avatar size="large" shape="square" :src="msg.avatar ?? msg.avatar" style="
+                                background-color: rgba(0, 0, 0, 0.4);
+                                width: 48px;
+                                height: 48px;
+                            " />
+                        <div style="margin-left: 0.5em">
+                            <span style="
+                                    font-weight: bold;
+                                    text-transform: capitalize;
+                                ">{{ msg.username }}</span>
+                            <div>
+                                <GiftFilled />
+                            </div>
                         </div>
                     </div>
                     <div class="user-content">
-                        <span style="font-weight: bold; text-transform: capitalize;">{{ msg.username }}</span>
-                        <span style="font-size: 14px;">{{ msg.created_at }}</span>
                         <p>
                             {{ msg.message }}
                         </p>
@@ -249,14 +390,15 @@ function pushWindowToBottom() {
             <div class="write-message">
                 <div class="inner">
                     <div class="input">
-                        <Button type="link" size="small" style="font-size: 10px; padding: 0;">logged as: {{
-                            auth.user
+                        <Button type="link" size="small" style="font-size: 10px; padding: 0">logged as: {{
+                            userStore.username
                             }}</Button>
                         <div class="form-send-message">
-                            <Textarea v-model:value="value1" size="large" style="width: 100%; margin-right: .5em;"
+                            <Textarea v-model:value="value1" size="large" style="width: 100%; margin-right: 0.5em"
                                 placeholder="scrivi la tua azione qui.." :auto-size="{ minRows: 1, maxRows: 5 }"
                                 show-count :maxlength="1000" />
                             <Button type="default" size="large" @click="send">
+                                <!-- <Button type="default" size="large"> -->
                                 <SendOutlined />
                             </Button>
                         </div>
@@ -268,20 +410,27 @@ function pushWindowToBottom() {
 </template>
 
 <style>
+.alert-message {
+    width: 280px;
+    position: fixed;
+    z-index: 100;
+    opacity: 0;
+}
+
 .chat {
     width: 100%;
     max-width: 1200px;
     height: 100%;
     /* background-color: rgba(255, 228, 196, .1); */
-    border-radius: .3em;
-    transition: all .4s ease-in-out;
+    border-radius: 0.3em;
+    transition: all 0.4s ease-in-out;
 }
 
 .chat-header {
     position: relative;
     width: 100%;
     z-index: 8;
-    background-color: rgba(255, 228, 196, .1);
+    background-color: rgba(255, 228, 196, 0.1);
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -290,10 +439,10 @@ function pushWindowToBottom() {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: rgba(255, 228, 196, .1);
-    padding: .5em 1em;
-    border-top-left-radius: .3em;
-    border-top-right-radius: .3em;
+    background-color: rgba(255, 228, 196, 0.1);
+    padding: 0.5em 1em;
+    border-top-left-radius: 0.3em;
+    border-top-right-radius: 0.3em;
     backdrop-filter: blur(1em);
 }
 
@@ -305,7 +454,7 @@ function pushWindowToBottom() {
 
 .chat-container {
     height: 100%;
-    padding: .5em 1em;
+    padding: 0.5em 1em;
 }
 
 .chat-header .user-list-online {
@@ -315,12 +464,14 @@ function pushWindowToBottom() {
     opacity: 0;
     padding: 1em;
     background-color: #b09c8f;
-    background: linear-gradient(90deg, rgba(176, 156, 143, .7) 0%, rgba(150, 131, 116, .9) 100%);
-    transition: all .3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    background: linear-gradient(90deg,
+            rgba(176, 156, 143, 0.7) 0%,
+            rgba(150, 131, 116, 0.9) 100%);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     backdrop-filter: blur(5px);
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-    border-bottom-left-radius: .3em;
-    border-bottom-right-radius: .3em;
+    border-bottom-left-radius: 0.3em;
+    border-bottom-right-radius: 0.3em;
 }
 
 .user-list-online.open {
@@ -340,8 +491,8 @@ function pushWindowToBottom() {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: .4em;
-    margin-right: .4em;
+    margin-bottom: 0.4em;
+    margin-right: 0.4em;
 }
 
 .user-list-online .user .ant-card {
@@ -349,7 +500,7 @@ function pushWindowToBottom() {
     background: url("../assets/sidebar2.jpg") no-repeat top right / cover;
     border: 2px groove rgba(0, 0, 0, 0.8);
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-    color: rgba(255, 193, 7, .85);
+    color: rgba(255, 193, 7, 0.85);
     margin-right: 0;
 }
 
@@ -361,12 +512,28 @@ function pushWindowToBottom() {
 .user-list-online .user .name {
     font-family: "Rubik Dirt", system-ui;
     font-size: 14px;
-    margin-left: .5em;
+    margin-left: 0.5em;
 }
 
 .text {
     line-height: 1.4;
     padding-bottom: 80px;
+}
+
+.text .description {
+    margin-bottom: 1em;
+}
+
+.text .description h2 {
+    font-size: 14px;
+}
+
+.description p {
+    font-size: 14px;
+}
+
+.description .tags {
+    padding: 0.2em 0;
 }
 
 .user-message {
@@ -375,19 +542,20 @@ function pushWindowToBottom() {
     align-items: flex-start;
     width: 100%;
     margin-bottom: 1.5em;
+    flex-wrap: wrap;
 }
 
 .user-message .user-avatar {
     display: flex;
     justify-content: flex-start;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    /* flex-wrap: wrap; */
     /* width: 60px; */
 }
 
 .user-avatar div {
-    width: 100%;
-    margin-top: .3em;
+    /* width: 100%; */
+    /* margin-top: .3em; */
     border-radius: 50%;
 }
 
@@ -396,7 +564,7 @@ function pushWindowToBottom() {
 }
 
 .user-content span {
-    margin-right: .5em;
+    margin-right: 0.5em;
 }
 
 .write-message {
@@ -413,15 +581,15 @@ function pushWindowToBottom() {
     display: flex;
     justify-content: center;
     padding-left: 220px;
-    transition: padding .4s ease-in-out;
+    transition: padding 0.4s ease-in-out;
 }
 
 .write-message .inner .input {
     width: 100%;
     max-width: 1200px;
-    padding: .3em 1em;
+    padding: 0.3em 1em;
     background-color: antiquewhite;
-    transition: all .4s ease-in-out;
+    transition: all 0.4s ease-in-out;
 }
 
 .ant-avatar {
@@ -436,9 +604,9 @@ function pushWindowToBottom() {
 }
 
 .form-send-message .input-default {
-    padding: .6em;
+    padding: 0.6em;
     font-size: 15px;
-    margin-right: .5em;
+    margin-right: 0.5em;
 }
 
 @media screen and (min-width: 1800px) {
@@ -453,15 +621,15 @@ function pushWindowToBottom() {
 
 @media screen and (max-width: 1200px) {
     .text {
-        padding-top: .5em;
+        padding-top: 0.5em;
     }
 
     .chat-header .chat-header-blur {
-        padding: .3em .5em
+        padding: 0.3em 0.5em;
     }
 
     .chat-container {
-        padding: 0 .5em 1em .5em;
+        padding: 0 0.5em 1em 0.5em;
     }
 
     .write-message {
@@ -473,11 +641,11 @@ function pushWindowToBottom() {
     }
 
     .write-message .inner .input {
-        padding: .3em .5em;
+        padding: 0.3em 0.5em;
     }
 
     .chat-header .user-list-online {
-        padding: .5em;
+        padding: 0.5em;
     }
 }
 </style>

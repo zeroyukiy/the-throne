@@ -1,25 +1,106 @@
 <script setup>
-import { Card, Avatar } from 'ant-design-vue';
-import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
+import { Card, Avatar, Button } from "ant-design-vue";
+import {
+    LockOutlined,
+    UnlockOutlined,
+    PlusCircleOutlined,
+} from "@ant-design/icons-vue";
+import { RouterLink } from "vue-router";
+import gsap from "gsap";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
+
+const chatList = reactive({
+    rooms: [],
+    loading: true,
+});
+const loading = ref(true);
+
+let tl = gsap.timeline();
+onMounted(async () => {
+    await getRooms();
+    tl.to(".ant-card", { y: 100, duration: 0.1 }).to(".ant-card", {
+        y: 0,
+        opacity: 1,
+        duration: 0.5,
+        stagger: { each: 0.1, from: "start" },
+    });
+});
+
+onUnmounted(() => {
+    tl = null;
+});
+
+const getRooms = async () => {
+    try {
+        // const req = await fetch(`http://localhost:8000/chat/list`)
+        // if (req.ok) {
+        //     const result = await req.json()
+        //     console.log(result)
+        //     const { rooms } = result
+        //     if (rooms.length > 0) {
+        //         console.log('list rooms ok')
+        //         chatList.rooms = rooms
+        chatList.rooms = [
+            {
+                room_id: "example",
+            },
+            {
+                room_id: "lalala",
+            },
+            {
+                room_id: "pluto-for-the-king",
+            },
+        ];
+        loading.value = false;
+        setTimeout(() => {
+            chatList.loading = false;
+        }, 1500);
+        //     }
+        // } else {
+        //     router.push({ name: "NotFound" })
+        // }
+    } catch (err) {
+        console.error(err);
+    }
+};
 </script>
 
 <template>
     <div class="content">
-        <h1>Esplora</h1>
+        <div class="bar">
+            <h1>Esplora</h1>
+            <RouterLink to="/chat/new" class="btn-success">
+                <Button type="primary">
+                    <PlusCircleOutlined /> Nuova Chat
+                </Button>
+            </RouterLink>
+        </div>
 
-        <div class="cards">
-
-            <RouterLink class="link" to="/chat">
-                <Card title="Nome della chat" extra="in corso" :bordered="false" size="small"
-                    style="background-color: rgb(200, 230, 201);">
+        <div class="cards" v-show="!loading">
+            <RouterLink
+                class="link"
+                :to="'/chat/' + room.room_id"
+                v-for="room in chatList.rooms"
+            >
+                <Card
+                    :title="room.room_id"
+                    extra="in corso"
+                    :bordered="false"
+                    :head-style="{
+                        borderBottom: '2px solid rgba(0, 0, 0, .65)',
+                    }"
+                    size="small"
+                    style="background-color: rgb(200, 230, 201)"
+                >
                     <div class="description">
                         <a-space align="start">
                             <Avatar shape="square" size="large" />
                             <div>
                                 <p>
-                                    Maecenas molestie eros id leo accumsan sagittis. Mauris malesuada, metus quis
-                                    efficitur rutrum, lorem
-                                    orci molestie ligula...
+                                    Maecenas molestie eros id leo accumsan
+                                    sagittis. Mauris malesuada, metus quis
+                                    efficitur rutrum, lorem orci molestie
+                                    ligula...
                                 </p>
                                 <div class="tags">
                                     <a-tag color="pink">free-role</a-tag>
@@ -30,7 +111,11 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                     </div>
                     <div class="card-info">
                         <div class="status">
-                            <a-tooltip placement="right" title="open" color="#3d3332">
+                            <a-tooltip
+                                placement="right"
+                                title="open"
+                                color="#3d3332"
+                            >
                                 <UnlockOutlined />
                             </a-tooltip>
                         </div>
@@ -42,14 +127,21 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </Card>
             </RouterLink>
 
-            <Card title="Card title" extra="conclusa" :bordered="false" size="small">
+            <Card
+                title="Card title"
+                extra="conclusa"
+                :bordered="false"
+                size="small"
+                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }"
+            >
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
                         <div>
                             <p>
-                                Suspendisse molestie ultricies neque sit amet mollis.
-                                Donec euismod libero quis felis eleifend blandit pharetra in libero...
+                                Suspendisse molestie ultricies neque sit amet
+                                mollis. Donec euismod libero quis felis eleifend
+                                blandit pharetra in libero...
                             </p>
                             <div class="tags">
                                 <a-tag color="red">pvp</a-tag>
@@ -62,7 +154,11 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
+                        <a-tooltip
+                            placement="right"
+                            title="close"
+                            color="#3d3332"
+                        >
                             <LockOutlined />
                         </a-tooltip>
                     </div>
@@ -73,7 +169,13 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </div>
             </Card>
 
-            <Card title="Card title" extra="conclusa" :bordered="false" size="small">
+            <Card
+                title="Card title"
+                extra="conclusa"
+                :bordered="false"
+                size="small"
+                :head-style="{ borderBottom: '2px solid rgba(0, 0, 0, .65)' }"
+            >
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
@@ -90,7 +192,11 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
+                        <a-tooltip
+                            placement="right"
+                            title="close"
+                            color="#3d3332"
+                        >
                             <LockOutlined />
                         </a-tooltip>
                     </div>
@@ -101,7 +207,13 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </div>
             </Card>
 
-            <Card :loading=true :bordered="false" size="small">
+            <Card
+                :loading="true"
+                :bordered="false"
+                size="small"
+                :key="k"
+                v-for="k in 4"
+            >
                 <div class="description">
                     <a-space align="start">
                         <Avatar shape="square" size="large" />
@@ -113,7 +225,11 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                 </div>
                 <div class="card-info">
                     <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
+                        <a-tooltip
+                            placement="right"
+                            title="close"
+                            color="#3d3332"
+                        >
                             <LockOutlined />
                         </a-tooltip>
                     </div>
@@ -123,87 +239,24 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
                     </div>
                 </div>
             </Card>
-
-            <Card :loading=true :bordered="false" size="small">
-                <div class="description">
-                    <a-space align="start">
-                        <Avatar shape="square" size="large" />
-                        <div>
-                            <p>Card content</p>
-                            <p>Card content</p>
-                        </div>
-                    </a-space>
-                </div>
-                <div class="card-info">
-                    <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
-                            <LockOutlined />
-                        </a-tooltip>
-                    </div>
-                    <div class="author">
-                        <p class="created-by">creata da: Jon Snow</p>
-                        <Avatar size="small" />
-                    </div>
-                </div>
-            </Card>
-
-            <Card :loading=true :bordered="false" size="small">
-                <div class="description">
-                    <a-space align="start">
-                        <Avatar shape="square" size="large" />
-                        <div>
-                            <p>Card content</p>
-                            <p>Card content</p>
-                        </div>
-                    </a-space>
-                </div>
-                <div class="card-info">
-                    <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
-                            <LockOutlined />
-                        </a-tooltip>
-                    </div>
-                    <div class="author">
-                        <p class="created-by">creata da: Jon Snow</p>
-                        <Avatar size="small" />
-                    </div>
-                </div>
-            </Card>
-
-            <Card :loading=true :bordered="false" size="small">
-                <div class="description">
-                    <a-space align="start">
-                        <Avatar shape="square" size="large" />
-                        <div>
-                            <p>Card content</p>
-                            <p>Card content</p>
-                        </div>
-                    </a-space>
-                </div>
-                <div class="card-info">
-                    <div class="status">
-                        <a-tooltip placement="right" title="close" color="#3d3332">
-                            <LockOutlined />
-                        </a-tooltip>
-                    </div>
-                    <div class="author">
-                        <p class="created-by">creata da: Jon Snow</p>
-                        <Avatar size="small" />
-                    </div>
-                </div>
-            </Card>
-
         </div>
     </div>
 </template>
 
-<style>
+<style scoped>
+.bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
 .cards {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 20px;
-    margin-top: .8em;
+    margin-top: 0.8em;
     margin-bottom: 1em;
 }
 
@@ -213,23 +266,24 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
     border: 2px solid;
     border-bottom: 4px solid;
     border-right: 4px solid;
-    border-color: rgba(0, 0, 0, .85);
+    border-color: rgba(0, 0, 0, 0.85);
+    opacity: 0;
 }
 
-.ant-card .ant-card-head {
+/* .ant-card .ant-card-head {
     border-bottom: 2px solid rgba(0, 0, 0, .65);
-}
+} */
 
 .cards .description {
     margin-bottom: 2em;
 }
 
 .description .tags {
-    margin-top: .2em;
+    margin-top: 0.2em;
 }
 
 .tags .ant-tag {
-    margin: .2em .4em .2em 0;
+    margin: 0.2em 0.4em 0.2em 0;
 }
 
 .ant-card-body .card-info {
@@ -252,8 +306,8 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
 
 .author .created-by {
     font-size: 12px;
-    margin-right: .5em;
-    color: rgba(0, 0, 0, .45);
+    margin-right: 0.5em;
+    color: rgba(0, 0, 0, 0.45);
 }
 
 @media only screen and (max-width: 1080px) {
@@ -268,7 +322,7 @@ import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue';
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* 
+    /*
     .card {
         width: 100%;
     }

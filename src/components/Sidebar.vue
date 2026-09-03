@@ -1,12 +1,14 @@
 <script setup>
 import { createVNode, onMounted, ref, watch } from 'vue';
 import { ExclamationCircleOutlined, LogoutOutlined, HomeOutlined, UserOutlined, MessageOutlined, FireOutlined, LoginOutlined } from '@ant-design/icons-vue';
-import { auth } from '@/auth.vue';
 import { useRouter } from 'vue-router';
-import { getWebsocket } from '@/ws';
-import { Modal } from 'ant-design-vue';
+// import { getWebsocket } from '@/ws';
+import { Modal, Avatar } from 'ant-design-vue';
+import { useUserStore } from '@/store/user';
 
 const router = useRouter()
+
+const userStore = useUserStore()
 
 const bounce = ref(false)
 
@@ -14,7 +16,6 @@ const bounce = ref(false)
 const props = defineProps(['open', 'is_open'])
 
 onMounted(() => {
-    console.log(auth)
     document.querySelectorAll("li > a.link").forEach((element) => {
         element.addEventListener("click", (e) => {
             if (props.is_open) {
@@ -24,33 +25,25 @@ onMounted(() => {
     })
 })
 
-watch(auth,
-    (user, prevUser) => {
-        console.log("user: ", user)
-        console.log("prev-user: ", prevUser)
-    })
-
 const logout = async () => {
+    props.open()
     Modal.confirm({
         title: 'Vuoi effettuare il log out?',
         icon: createVNode(ExclamationCircleOutlined),
         content: 'clicca ok per terminare la sessione',
         async onOk() {
             // call the api/auth/logout endpoint
-            const req = await fetch("/api/auth/logout", {
-                method: "POST",
-                body: JSON.stringify({
-                })
+            const req = await fetch("http://localhost:8000/logout", {
+                credentials: 'include',
+                method: 'POST',
             })
             if (req.ok) {
-                auth.value.user = ""
-                localStorage.removeItem("user")
+                userStore.logout()
                 console.log("logout success")
                 router.push("/")
                     .then(() => {
-                        console.log("oooo ok")
-                        getWebsocket().close()
-                        // window.location.reload()
+                        // console.log("socket conn close")
+                        // ws.conn.close()
                     })
             }
         },
@@ -107,10 +100,14 @@ const logout = async () => {
             </ul>
         </div>
         <ul class="menu-settings">
+            <!-- <li v-show="store.is_auth"> -->
+            <!-- <Avatar size="" :src="store.user.avatar" /> -->
+            <!-- <span style="font-size: 10px; color: bisque;">logged as: {{ store.user.name }}</span> -->
+            <!-- </li> -->
             <li>
                 <div class="bounce-ball" :class="bounce === true ? 'active' : ''"></div>
                 <RouterLink class="link link-danger" to="" @mouseover="bounce = true" @mouseout="bounce = false"
-                    @click="logout" v-if="auth.user">
+                    @click="logout" v-if="userStore.is_auth">
                     Disconnetti
                     <LogoutOutlined />
                 </RouterLink>
@@ -139,7 +136,7 @@ const logout = async () => {
 }
 
 li span {
-    margin-right: .5em;
+    /* margin-right: .5em; */
 }
 
 .sidebar .menu-settings {
@@ -151,14 +148,18 @@ li span {
     justify-content: space-between;
     padding: .5em .8em;
     background-color: rgba(0, 0, 0, 0.3);
+    /* background-color: #e2e8f0; */
     border-radius: 5px;
     color: #FFE0B2;
+    /* color: #314158; */
     font-size: 14px;
 }
 
 .link:hover {
     color: aliceblue;
     background-color: rgba(0, 0, 0, 0.7);
+    /* background-color: #cad5e2 */
+    /* background-color: #2979FF; */
 }
 
 .link-danger {
@@ -166,7 +167,8 @@ li span {
 }
 
 .link-danger:hover {
-    background-color: #c10007;
+    /* background-color: #c10007; */
+    background-color: #FF3D00;
     text-decoration: line-through;
 }
 
@@ -175,7 +177,8 @@ li span {
 }
 
 .link-success:hover {
-    background-color: #43A047;
+    /* background-color: #43A047; */
+    background-color: #00E676;
     text-decoration: line-through;
 }
 
@@ -202,6 +205,7 @@ li span {
 .active {
     color: aliceblue;
     background-color: rgba(0, 0, 0, 0.7);
+    /* background-color: #2979FF; */
 }
 
 span.anticon {
@@ -212,6 +216,7 @@ span.anticon {
     font-size: 8px;
     text-transform: uppercase;
     color: rgba(255, 193, 7, .85);
+    /* color: #314158; */
     text-align: right;
 }
 
