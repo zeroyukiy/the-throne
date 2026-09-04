@@ -33,18 +33,22 @@ const logout = async () => {
         content: 'clicca ok per terminare la sessione',
         async onOk() {
             // call the api/auth/logout endpoint
-            const req = await fetch("http://localhost:8000/logout", {
-                credentials: 'include',
-                method: 'POST',
-            })
-            if (req.ok) {
-                userStore.logout()
-                console.log("logout success")
-                router.push("/")
-                    .then(() => {
-                        // console.log("socket conn close")
-                        // ws.conn.close()
-                    })
+            try {
+                const req = await fetch("http://localhost:8000/logout", {
+                    credentials: 'include',
+                    method: 'POST',
+                })
+                if (req.ok) {
+                    userStore.logout()
+                    console.log("logout success")
+                    router.push("/")
+                        .then(() => {
+                            // console.log("socket conn close")
+                            // ws.conn.close()
+                        })
+                }
+            } catch (error) {
+                console.error(error)
             }
         },
         // eslint-disable-next-line @typescript-eslint/no-empty-function

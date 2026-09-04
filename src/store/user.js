@@ -36,7 +36,9 @@ export const useUserStore = defineStore("user", () => {
   const logout = () => {
     is_auth.value = false;
     username.value = "";
-    socket.value.close(1000)
+    if (socket.value !== "") {
+      socket.value.close(1000)
+    }
   };
 
   return { username, is_auth, avatar, socket, init, logout };

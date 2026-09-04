@@ -66,7 +66,7 @@ const getRooms = async () => {
 
         <div class="cards" v-show="!loading">
             <RouterLink class="link" :to="'/chat/' + room.slug" v-for="room in chatList.rooms">
-                <Card :title="room.room_id" extra="in corso" :bordered="false" :head-style="{
+                <Card :title="room.name" extra="in corso" :bordered="false" :head-style="{
                     borderBottom: '2px solid rgba(0, 0, 0, .65)',
                 }" size="small" style="background-color: rgb(200, 230, 201)">
                     <div class="description">
@@ -74,10 +74,11 @@ const getRooms = async () => {
                             <Avatar shape="square" size="large" />
                             <div>
                                 <p>
-                                    Maecenas molestie eros id leo accumsan
+                                    {{ room.description.length > 115 ? room.description.substring(0, 115).trim() + ".." : room.description }}
+                                    <!-- Maecenas molestie eros id leo accumsan
                                     sagittis. Mauris malesuada, metus quis
                                     efficitur rutrum, lorem orci molestie
-                                    ligula...
+                                    ligula... -->
                                 </p>
                                 <div class="tags">
                                     <a-tag color="pink">free-role</a-tag>

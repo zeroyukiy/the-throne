@@ -1,9 +1,9 @@
 <script setup>
 import { useUserStore } from "@/store/user";
+import { useChatStore } from "@/store/chat";
 import {
     EllipsisOutlined,
     SendOutlined,
-    GiftFilled,
 } from "@ant-design/icons-vue";
 import {
     Button,
@@ -14,104 +14,20 @@ import {
     Textarea,
     Tag,
 } from "ant-design-vue";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import gsap from "gsap";
 import { EventType } from "@/helpers/event_types";
 import { SmileOutlined } from "@ant-design/icons-vue";
 import { useRoute, useRouter } from "vue-router";
+import ChatMessage from "@/components/ChatMessage.vue";
 
 const userStore = useUserStore();
+const chatStore = useChatStore();
 
 const route = useRoute()
 const router = useRouter()
 
 const value1 = ref("");
-
-const messages = ref([
-    {
-        username: "abcd",
-        message: `Nunc quis sem mattis, ullamcorper sem sit amet, pulvinar magna. Cras iaculis felis ut felis accumsan
-                    interdum. Aliquam erat volutpat. Proin eu erat massa. Phasellus a velit augue. Suspendisse eu lacus
-                    in purus pulvinar scelerisque non sit amet mauris. Pellentesque tellus ipsum, volutpat ut
-                    pellentesque sed, lacinia interdum eros.
-
-                    Donec eu augue eu nulla blandit accumsan. Mauris vitae sollicitudin tortor, at ornare purus. Morbi
-                    gravida ullamcorper tellus ac tincidunt. Sed id quam nulla. Nam quis velit nunc. Proin pulvinar erat
-                    ligula, a condimentum ipsum consectetur in. Nulla facilisi. Etiam sit amet mi at ligula dapibus
-                    luctus.
-
-                    Aliquam quis lacus vel enim pretium volutpat eu at nibh. Vestibulum sollicitudin urna ut mauris
-                    facilisis condimentum. Sed ligula tellus, dignissim non urna sed, commodo ullamcorper lorem. Cras ac
-                    scelerisque mauris. Aliquam metus neque, fringilla a ligula id, auctor tempus nulla. Donec euismod
-                    libero quis felis eleifend blandit pharetra in libero. Aenean interdum ultrices lorem, eu interdum
-                    velit convallis eu. Vestibulum commodo elit nunc, sed sagittis lectus imperdiet at. Suspendisse
-                    molestie ultricies neque sit amet mollis. Proin massa diam, facilisis sit amet sem quis, malesuada
-                    malesuada nunc. Nulla nec tellus ut quam semper rhoncus. Duis imperdiet ultrices ligula, quis mollis
-                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`,
-    },
-    {
-        username: "lollo0",
-        message: `In ac pretium libero. Proin lacinia dapibus risus, consectetur mattis libero dictum quis. Aenean
-                    cursus, libero non blandit condimentum, felis nisi consequat nisl, quis pharetra nunc nulla quis
-                    diam. Praesent ultrices lectus nulla, non finibus mauris vulputate ut. Proin vitae arcu non diam
-                    imperdiet mollis. Quisque sit amet pretium nisi. Donec vitae dolor pretium, pulvinar nibh vitae,
-                    blandit orci. Vivamus condimentum eros est, sit amet venenatis velit pellentesque sit amet.
-                    Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Duis
-                    vitae quam semper orci volutpat pellentesque. Vestibulum ac consectetur lacus, volutpat ultricies
-                    justo. In eu dictum lacus. Proin a ipsum eu tellus semper congue. Cras tincidunt orci a consectetur
-                    imperdiet. Fusce varius dui ac diam euismod molestie.
-
-                    Aenean aliquam arcu eu dui sodales, varius imperdiet ex tristique. Nunc auctor lacinia nibh, vel
-                    faucibus magna congue volutpat. Phasellus quis ante erat. Mauris mollis velit metus, sed consectetur
-                    orci lobortis vel. Proin et odio vel diam volutpat facilisis vel vitae augue. Morbi condimentum
-                    vitae massa vel pharetra. Fusce eu fringilla odio, sed gravida metus. Orci varius natoque penatibus
-                    et magnis dis parturient montes, nascetur ridiculus mus. Morbi non libero vitae lacus pharetra
-                    rutrum ac in tellus. Fusce tincidunt urna vitae tellus tincidunt, eget consequat tortor commodo.
-                    Donec mollis, sapien non tincidunt blandit, nisi justo varius velit, sed scelerisque tortor neque
-                    sit amet augue. Etiam vehicula augue tortor, in varius sapien viverra molestie. Cras rutrum vel
-                    sapien vitae rhoncus.
-
-                    Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aenean
-                    eu tortor consectetur, suscipit lorem eu, venenatis urna. Nunc sed ligula mollis, commodo leo vitae,
-                    efficitur leo. Duis eget rhoncus nisl. Integer justo dolor, fringilla eget urna at, euismod
-                    consectetur ante. Integer vel metus id mauris tincidunt dignissim. Morbi facilisis condimentum nisl,
-                    id ornare nibh elementum nec. Donec eu commodo ipsum, et posuere arcu. Donec consequat hendrerit
-                    turpis sit amet vehicula. Etiam pharetra consectetur felis, id tempor felis tincidunt vel. Sed eget
-                    efficitur turpis. Donec at magna eleifend, varius tortor in, sollicitudin ligula. Fusce ornare
-                    molestie dui eu fringilla.`,
-    },
-    {
-        username: "aa",
-        message: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vulputate urna ante, ac elementum
-                    turpis tincidunt at. Mauris molestie condimentum sapien eu congue. Sed egestas congue euismod.
-                    Maecenas non nisl eget risus commodo fringilla. Praesent cursus ligula in neque elementum fermentum.
-                    Donec porta vel lorem sed cursus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
-                    posuere cubilia curae; Duis non tellus non ante vulputate tincidunt. Sed interdum id libero vitae
-                    condimentum. Nullam eget ultricies urna, convallis finibus dolor. Phasellus tempus sed lectus eu
-                    venenatis. Quisque eget luctus tellus.`,
-    },
-    {
-        username: "someone",
-        message: `Nunc quis sem mattis, ullamcorper sem sit amet, pulvinar magna. Cras iaculis felis ut felis accumsan
-                    interdum. Aliquam erat volutpat. Proin eu erat massa. Phasellus a velit augue. Suspendisse eu lacus
-                    in purus pulvinar scelerisque non sit amet mauris. Pellentesque tellus ipsum, volutpat ut
-                    pellentesque sed, lacinia interdum eros.
-
-                    Donec eu augue eu nulla blandit accumsan. Mauris vitae sollicitudin tortor, at ornare purus. Morbi
-                    gravida ullamcorper tellus ac tincidunt. Sed id quam nulla. Nam quis velit nunc. Proin pulvinar erat
-                    ligula, a condimentum ipsum consectetur in. Nulla facilisi. Etiam sit amet mi at ligula dapibus
-                    luctus.
-
-                    Aliquam quis lacus vel enim pretium volutpat eu at nibh. Vestibulum sollicitudin urna ut mauris
-                    facilisis condimentum. Sed ligula tellus, dignissim non urna sed, commodo ullamcorper lorem. Cras ac
-                    scelerisque mauris. Aliquam metus neque, fringilla a ligula id, auctor tempus nulla. Donec euismod
-                    libero quis felis eleifend blandit pharetra in libero. Aenean interdum ultrices lorem, eu interdum
-                    velit convallis eu. Vestibulum commodo elit nunc, sed sagittis lectus imperdiet at. Suspendisse
-                    molestie ultricies neque sit amet mollis. Proin massa diam, facilisis sit amet sem quis, malesuada
-                    malesuada nunc. Nulla nec tellus ut quam semper rhoncus. Duis imperdiet ultrices ligula, quis mollis
-                    sapien rhoncus sit amet. Ut lobortis a magna et cursus. Integer at finibus sem.`,
-    },
-]);
 
 const chatUserListOpen = ref(false);
 const chatUserListOnline = () => {
@@ -119,44 +35,36 @@ const chatUserListOnline = () => {
 };
 
 const { socket } = userStore;
-const loading = ref(true)
-const chat = reactive({
-    id: "",
-    description: "",
-    users: []
-})
 
-watch(loading, async (old, next) => {
+const isLoading = ref(true)
+
+watch(isLoading, async (old, next) => {
     console.log(userStore.socket)
     socket.send(JSON.stringify({
         event: EventType.JoinRoom,
         payload: {
-            room_id: chat.id,
+            room_id: chatStore.slug,
         },
     }))
 })
 
-// watch(, async (old, next) => {
-//     console.log(old)
-//     console.log(next)
-// })
-
-const getRoom = async (id) => {
+const getRoom = async (slug_param) => {
     try {
-        const req = await fetch(`http://localhost:8000/chat/${id}`)
+        const req = await fetch(`http://localhost:8000/chat/${slug_param}`)
         if (req.ok) {
             const result = await req.json()
             console.log(result)
-            const { name, slug, description } = result
-            if (slug === id) {
+            const { id, name, slug, description, messages } = result
+            if (slug_param === slug) {
                 console.log('room_id ok')
-                chat.id = slug
-                chat.name = name.charAt(0).toUpperCase() + name.slice(1)
-                chat.description = description
-                loading.value = false
+                chatStore.id = id
+                chatStore.name = name.charAt(0).toUpperCase() + name.slice(1)
+                chatStore.slug = slug
+                chatStore.description = description
+                isLoading.value = false
+                chatStore.messages = messages
             }
         } else {
-            // router.push({ name: "NotFound"})
             router.replace({ path: "/notfound" })
         }
     } catch (err) {
@@ -182,12 +90,15 @@ onMounted(async () => {
                 JSON.parse(message.data);
             if (event == EventType.Message) {
                 console.log(message);
-                messages.value.push({
-                    username: payload.username,
-                    avatar: payload.avatar,
-                    message: payload.message,
+                chatStore.addMessage({
+                    user: {
+                        id: payload.user_id,
+                        username: payload.username,
+                        avatar: payload.avatar,
+                    },
+                    text: payload.message,
                     created_at: timestamp,
-                });
+                })
                 // pushWindowToBottom()
                 if (payload.username !== userStore.username) {
                     openAlertMessage();
@@ -196,34 +107,9 @@ onMounted(async () => {
         };
 
     }
-
-
-    //     const msgs = await axios.get("/api/messages/chat_1", {
-    //         withCredentials: true,
-    //     })
-    //     if (msgs.status === 200) {
-    //         const data = msgs.data
-    //         console.log(data)
-    //         messages.value.push(...data)
-    //         console.log(messages.value)
-    //     }
 });
 
-// onBeforeUnmount(() => {
-//     ws.conn.send(JSON.stringify({
-//         "event_type": EventType.Leave,
-//     }))
-// })
-
 async function send() {
-    // const msgs = await axios.post("/api/message", {
-    //     message: value1.value,
-    // }, {
-    //     withCredentials: true,
-    // })
-    // if (msgs.status === 200) {
-    //     console.log("message sent")
-    // }
     socket.send(
         JSON.stringify({
             event: EventType.Message,
@@ -281,25 +167,18 @@ onMounted(() => {
 
 onUnmounted(async () => {
     tl = null;
-
     socket.send(JSON.stringify({
         event: EventType.LeaveRoom,
         payload: {
             room_id: "chat"
         },
     }))
-    // await socket.send(
-    //     JSON.stringify({
-    //         event_type: EventType.Leave,
-    //         message: "/chat",
-    //     }),
-    // );
 });
 </script>
 
 <template>
     <!-- <div class="chat" v-show="ws.open"> -->
-    <div class="chat" v-show="!loading">
+    <div class="chat" v-show="!isLoading">
         <div class="alert-message">
             <a-alert message="Ci sono nuovi messaggi" type="info" show-icon @click="pushDown">
                 <template #icon><smile-outlined /></template>
@@ -307,7 +186,7 @@ onUnmounted(async () => {
         </div>
         <div class="chat-header">
             <div class="chat-header-blur">
-                <div class="chat-title">{{ chat.name }}</div>
+                <div class="chat-title">{{ chatStore.name }}</div>
                 <Button type="text" @click="chatUserListOnline">
                     <template #icon>
                         <EllipsisOutlined />
@@ -343,7 +222,7 @@ onUnmounted(async () => {
                         <Card size="small">
                             <Space>
                                 <Badge color="green" :dot="true">
-                                    <Avatar class="avatar" size="large" />
+                                    <Avatar class="avatar" size="large" src="http://localhost:8000/assets/avatars/avatar_deity_man_02.png" />
                                 </Badge>
                                 <div class="name">Jor Gok</div>
                             </Space>
@@ -357,7 +236,7 @@ onUnmounted(async () => {
                 <div class="description">
                     <h2>Descrizione</h2>
                     <p>
-                        {{ chat.description }}
+                        {{ chatStore.description }}
                     </p>
                     <div class="tags">
                         <Tag color="pink">free-role</Tag>
@@ -365,36 +244,19 @@ onUnmounted(async () => {
                     </div>
                 </div>
 
-                <div class="user-message" v-for="msg in messages">
-                    <div class="user-avatar">
-                        <Avatar size="large" shape="square" :src="msg.avatar ?? msg.avatar" style="
-                                background-color: rgba(0, 0, 0, 0.4);
-                                width: 48px;
-                                height: 48px;
-                            " />
-                        <div style="margin-left: 0.5em">
-                            <span style="
-                                    font-weight: bold;
-                                    text-transform: capitalize;
-                                ">{{ msg.username }}</span>
-                            <div>
-                                <GiftFilled />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="user-content">
-                        <p>
-                            {{ msg.message }}
-                        </p>
-                    </div>
-                </div>
+                <!-- ChatMessage -->
+                <ChatMessage :message="message" :keyMessage="key" v-for="(message, key) in chatStore.messages" />
+                <!-- <div class="user-messsage" v-else>
+                    <p>No messages..</p>
+                </div> -->
+                <!-- End ChatMessage -->
             </div>
             <div class="write-message">
                 <div class="inner">
                     <div class="input">
                         <Button type="link" size="small" style="font-size: 10px; padding: 0">logged as: {{
                             userStore.username
-                            }}</Button>
+                        }}</Button>
                         <div class="form-send-message">
                             <Textarea v-model:value="value1" size="large" style="width: 100%; margin-right: 0.5em"
                                 placeholder="scrivi la tua azione qui.." :auto-size="{ minRows: 1, maxRows: 5 }"
@@ -501,10 +363,15 @@ onUnmounted(async () => {
 .user-list-online .user .ant-card {
     background-color: rgba(0, 0, 0, 0.2);
     background: url("../assets/sidebar2.jpg") no-repeat top right / cover;
-    border: 2px groove rgba(0, 0, 0, 0.8);
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+    /* border: 2px groove rgba(0, 0, 0, 0.8); */
     color: rgba(255, 193, 7, 0.85);
     margin-right: 0;
+
+    border: 2px solid;
+    border-bottom: 4px solid;
+    border-right: 4px solid;
+    border-color: rgba(0, 0, 0, 0.85);
+    border-radius: .6em;
 }
 
 .user-list-online .user .avatar {
@@ -537,37 +404,6 @@ onUnmounted(async () => {
 
 .description .tags {
     padding: 0.2em 0;
-}
-
-.user-message {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    width: 100%;
-    margin-bottom: 1.5em;
-    flex-wrap: wrap;
-}
-
-.user-message .user-avatar {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    /* flex-wrap: wrap; */
-    /* width: 60px; */
-}
-
-.user-avatar div {
-    /* width: 100%; */
-    /* margin-top: .3em; */
-    border-radius: 50%;
-}
-
-.user-message .user-content {
-    width: 100%;
-}
-
-.user-content span {
-    margin-right: 0.5em;
 }
 
 .write-message {
